@@ -12,9 +12,12 @@ Public Function ConcatIf(criteriaRange As Range, ifCriteria As Variant, Optional
     rowStart = criteriaRange.Row
     colStart = criteriaRange.Column
     
+    Dim evOp As Variant
+    evOp = Left$(ifCriteria, 1)
+    
     Dim result As String
     Dim val As Variant
-    Dim evalString As String
+    Dim matched As String
     Dim rowRel As Integer
     Dim colRel As Integer
     
@@ -27,10 +30,27 @@ Public Function ConcatIf(criteriaRange As Range, ifCriteria As Variant, Optional
     For Each entry In criteriaRange
         'Get the criteria evaluation string
         val = entry.Value
+        If IsEmpty(val) Then
+            val = """"""
+        End If
         evalString = """" & val & """=""" & ifCriteria & """"
 
+        matched = False
         'If the the criteriaRange cell matches the criteria
-        If Application.Evaluate(evalString) Then
+        If evOp = "=" Or evOp = "<" Or evOp = ">" Then
+            If Not IsNumeric(val) Then
+                val = """" & val & """"
+            End If
+            If Application.Evaluate(val & ifCriteria) Then
+                matched = True
+            End If
+        Else
+            If val Like ifCriteria Then
+                matched = True
+            End If
+        End If
+
+        If matched Then
             rowRel = entry.Row - rowStart + 1
             colRel = entry.Column - colStart + 1
             result = result & concatRange.Cells(rowRel, colRel).Value & concatSpacer
